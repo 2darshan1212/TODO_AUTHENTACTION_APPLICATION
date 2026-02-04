@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { navigateToLogin } from '../utils/navigation';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -23,17 +24,26 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle common errors
+// Response interceptor to handle token expiration
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid - clear token
-      localStorage.removeItem('token');
-      // Only redirect if not already on login/register page
-      if (!window.location.pathname.includes('/login') && 
-          !window.location.pathname.includes('/register')) {
-        window.location.href = '/login';
+      // Token expired or invalid
+      const currentPath = window.location.pathname;
+      const isAuthPage = currentPath.includes('/login') || currentPath.includes('/register');
+      
+      if (!isAuthPage) {
+        // Clear token and trigger logout
+        localStorage.removeItem('token');
+        
+        // Call global logout handler if available (from AuthContext)
+        if (window.handleAuthLogout) {
+          window.handleAuthLogout();
+        }
+        
+        // Navigate to login
+        navigateToLogin();
       }
     }
     return Promise.reject(error);

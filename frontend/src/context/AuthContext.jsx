@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../config/axios';
 
 const AuthContext = createContext(null);
@@ -15,7 +15,21 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Logout function that can be called from anywhere
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    setUser(null);
+  }, []);
+
+  // Handle token expiration - called by axios interceptor
+  const handleTokenExpiration = useCallback(() => {
+    logout();
+  }, [logout]);
+
   useEffect(() => {
+    // Store logout handler globally so axios interceptor can access it
+    window.handleAuthLogout = handleTokenExpiration;
+
     // Check if user is logged in on mount
     const token = localStorage.getItem('token');
     if (token) {
@@ -25,7 +39,12 @@ export const AuthProvider = ({ children }) => {
       setUser({ authenticated: true });
     }
     setLoading(false);
-  }, []);
+
+    // Cleanup
+    return () => {
+      delete window.handleAuthLogout;
+    };
+  }, [handleTokenExpiration]);
 
   const login = async (email, password) => {
     try {
@@ -59,11 +78,6 @@ export const AuthProvider = ({ children }) => {
         message: error.response?.data?.message || 'Registration failed. Please try again.',
       };
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
   };
 
   return (
