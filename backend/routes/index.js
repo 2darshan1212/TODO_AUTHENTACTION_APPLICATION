@@ -9,6 +9,9 @@ router.get('/', (req, res) => {
   });
 });
 
+// Auth routes
+router.use('/auth', require('./auth'));
+
 // Example: Add more routes here
 // router.use('/todos', require('./todos'));
 
