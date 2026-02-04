@@ -1,7 +1,4 @@
-// Export all models from here
-// Example:
-// const Todo = require('./Todo');
-// module.exports = { Todo };
+const User = require('./User');
 
-module.exports = {};
+module.exports = { User };
 
