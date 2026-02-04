@@ -19,7 +19,8 @@ const authorizeTodo = async (req, res, next) => {
     }
 
     // Check if todo belongs to the authenticated user
-    if (todo.user.toString() !== req.user._id.toString()) {
+    const isOwner = todo.user.toString() === req.user._id.toString();
+    if (!isOwner) {
       return res.status(403).json({
         success: false,
         message: 'Access denied. You do not have permission to access this todo.',

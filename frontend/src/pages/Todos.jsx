@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { todoService } from '../services/todoService';
+import { FILTER_OPTIONS, TODO_STATUS } from '../constants';
 
 const Todos = () => {
   const { user, logout } = useAuth();
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState('All'); // All, Pending, Completed
+  const [filter, setFilter] = useState(FILTER_OPTIONS.ALL);
   const [newTodoTitle, setNewTodoTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -73,16 +74,20 @@ const Todos = () => {
     }
   };
 
-  // Filter todos based on selected filter
-  const filteredTodos = todos.filter(todo => {
-    if (filter === 'All') return true;
-    return todo.status === filter;
-  });
+  // Filter and calculate stats using useMemo for performance
+  const { filteredTodos, pendingCount, completedCount, totalCount } = useMemo(() => {
+    const filtered = todos.filter(todo => {
+      if (filter === FILTER_OPTIONS.ALL) return true;
+      return todo.status === filter;
+    });
 
-  // Calculate counts
-  const pendingCount = todos.filter(todo => todo.status === 'Pending').length;
-  const completedCount = todos.filter(todo => todo.status === 'Completed').length;
-  const totalCount = todos.length;
+    return {
+      filteredTodos: filtered,
+      pendingCount: todos.filter(todo => todo.status === TODO_STATUS.PENDING).length,
+      completedCount: todos.filter(todo => todo.status === TODO_STATUS.COMPLETED).length,
+      totalCount: todos.length,
+    };
+  }, [todos, filter]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -160,7 +165,7 @@ const Todos = () => {
 
             {/* Filter Buttons */}
             <div className="flex gap-2">
-              {['All', 'Pending', 'Completed'].map((filterOption) => (
+              {Object.values(FILTER_OPTIONS).map((filterOption) => (
                 <button
                   key={filterOption}
                   onClick={() => setFilter(filterOption)}
@@ -201,16 +206,16 @@ const Todos = () => {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {filter === 'All' && totalCount === 0
+              {filter === FILTER_OPTIONS.ALL && totalCount === 0
                 ? 'No todos yet'
-                : filter === 'Pending'
+                : filter === FILTER_OPTIONS.PENDING
                 ? 'No pending todos'
                 : 'No completed todos'}
             </h3>
             <p className="text-gray-500">
-              {filter === 'All' && totalCount === 0
+              {filter === FILTER_OPTIONS.ALL && totalCount === 0
                 ? 'Get started by adding your first todo above!'
-                : `Try switching to the "${filter === 'Pending' ? 'Completed' : 'Pending'}" filter.`}
+                : `Try switching to the "${filter === FILTER_OPTIONS.PENDING ? FILTER_OPTIONS.COMPLETED : FILTER_OPTIONS.PENDING}" filter.`}
             </p>
           </div>
         ) : (
@@ -219,20 +224,20 @@ const Todos = () => {
               <div
                 key={todo._id}
                 className={`bg-white rounded-lg shadow-sm p-4 flex items-start gap-4 transition-all ${
-                  todo.status === 'Completed' ? 'opacity-75' : ''
+                  todo.status === TODO_STATUS.COMPLETED ? 'opacity-75' : ''
                 }`}
               >
                 {/* Toggle Status Checkbox */}
                 <button
                   onClick={() => handleToggleStatus(todo._id, todo.status)}
                   className={`mt-1 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                    todo.status === 'Completed'
+                    todo.status === TODO_STATUS.COMPLETED
                       ? 'bg-green-500 border-green-500'
                       : 'border-gray-300 hover:border-indigo-500'
                   }`}
-                  aria-label={`Mark as ${todo.status === 'Pending' ? 'Completed' : 'Pending'}`}
+                  aria-label={`Mark as ${todo.status === TODO_STATUS.PENDING ? TODO_STATUS.COMPLETED : TODO_STATUS.PENDING}`}
                 >
-                  {todo.status === 'Completed' && (
+                  {todo.status === TODO_STATUS.COMPLETED && (
                     <svg
                       className="w-3 h-3 text-white"
                       fill="none"
@@ -253,7 +258,7 @@ const Todos = () => {
                 <div className="flex-1 min-w-0">
                   <h3
                     className={`text-lg font-medium ${
-                      todo.status === 'Completed'
+                      todo.status === TODO_STATUS.COMPLETED
                         ? 'line-through text-gray-500'
                         : 'text-gray-900'
                     }`}
@@ -263,7 +268,7 @@ const Todos = () => {
                   <div className="flex items-center gap-2 mt-1">
                     <span
                       className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        todo.status === 'Pending'
+                        todo.status === TODO_STATUS.PENDING
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-green-100 text-green-800'
                       }`}
