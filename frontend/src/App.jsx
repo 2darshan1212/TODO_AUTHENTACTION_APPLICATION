@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Todos from './pages/Todos';
 import { setNavigate } from './utils/navigation';
 
 // Component to set up navigation utility
@@ -44,16 +45,7 @@ function App() {
               path="/"
               element={
                 <ProtectedRoute>
-                  <div className="min-h-screen bg-gray-50">
-                    <div className="container mx-auto px-4 py-8">
-                      <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                        Todo App
-                      </h1>
-                      <p className="text-gray-600">
-                        Welcome! Your todo app will be built here.
-                      </p>
-                    </div>
-                  </div>
+                  <Todos />
                 </ProtectedRoute>
               }
             />
