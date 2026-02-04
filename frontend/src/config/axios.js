@@ -28,9 +28,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid - clear token and redirect to login
+      // Token expired or invalid - clear token
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      // Only redirect if not already on login/register page
+      if (!window.location.pathname.includes('/login') && 
+          !window.location.pathname.includes('/register')) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
