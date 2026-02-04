@@ -11,7 +11,14 @@ const routes = require('./routes');
 const app = express();
 
 // Middleware
-app.use(cors());
+// CORS: allow requests from any origin (use more restrictive config in production if needed)
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
